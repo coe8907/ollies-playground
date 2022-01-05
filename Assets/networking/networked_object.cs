@@ -14,7 +14,7 @@ public class networked_object : MonoBehaviour
     int id = -1;
     void Start()
     {
-        name = gameObject.name;
+        obj_name = gameObject.name;
         networkmaster = GameObject.Find("Network_master").GetComponent<NetworkMaster>();
         id = networkmaster.new_object(this);
         if(id == -1){

@@ -50,13 +50,13 @@ public class NetworkMaster : MonoBehaviour
         }
     }
     public void Send_message(int id,string message){
-        Byte[] sendBytes = Encoding.ASCII.GetBytes(message);
+        Byte[] sendBytes = Encoding.ASCII.GetBytes(id+":"+message);
         udpClient.Send(sendBytes, sendBytes.Length);
     }
     public int new_object(networked_object obj){
         for(int i = 0; i < MAX_OBJECTS; i ++){
             if(!gameobjects.ContainsKey(i)){
-                Send_message(-100,"NewObject:"+obj.get_name());
+                Send_message(-100,"NewObject:"+obj.get_name() + ":" +i);
                 gameobjects.Add(i,obj);
                 return i;
             }
