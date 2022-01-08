@@ -36,8 +36,9 @@
     <ImplicitlyExpandDesignTimeFacades>false</ImplicitlyExpandDesignTimeFacades>
   </PropertyGroup>
   <ItemGroup>
-     <Compile Include="Assets\networking\networked_object.cs" />
      <Compile Include="Assets\NetworkMaster.cs" />
+     <Compile Include="Assets\networking\networked_object.cs" />
+     <Compile Include="Assets\NetworkSlave.cs" />
     <Reference Include="UnityEngine">
         <HintPath>E:\unity\ertod\2020.3.25f1\Editor\Data\Managed\UnityEngine\UnityEngine.dll</HintPath>
     </Reference>

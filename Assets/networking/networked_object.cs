@@ -12,8 +12,27 @@ public class networked_object : MonoBehaviour
     NetworkMaster networkmaster;
     string obj_name = "null";
     int id = -1;
+    List<Component> myComponents = new List<Component>(); 
+    List<string> lastsents = new List<string>();
+    
     void Start()
     {
+        Component[] myComponent = GetComponents(typeof(Component));
+        foreach (Component myComp in myComponent)
+         {
+             myComponents.Add(myComp);
+             Type myObjectType = myComp.GetType();
+             foreach (var thisVar in myComp.GetType().GetProperties())
+             {
+                  try
+                 {
+                    lastsents.Add(myComp.name + ":" + thisVar.Name  +  ":" + thisVar.GetValue(myComp,null));
+                 }
+                 catch (Exception e)
+                 {
+                 }
+             }
+         }
         obj_name = gameObject.name;
         networkmaster = GameObject.Find("Network_master").GetComponent<NetworkMaster>();
         id = networkmaster.new_object(this);
@@ -29,17 +48,29 @@ public class networked_object : MonoBehaviour
     string current_stat;
     void Update()
     {
-        current_stat = gameObject.name;
-        current_stat += ((int)this.transform.rotation.eulerAngles.z).ToString()
-         + ((int)this.transform.rotation.eulerAngles.y).ToString()
-         + ((int)this.transform.rotation.eulerAngles.x).ToString()
-         + ((int)this.transform.position.x).ToString()
-         + ((int)this.transform.position.y).ToString()
-         + ((int)this.transform.position.z).ToString();
-
-        if(lastsent != current_stat){
-          networkmaster.Send_message(id, current_stat);
-        }
+        int i =0;
+         foreach (Component myComp in myComponents)
+         {
+             Type myObjectType = myComp.GetType();
+             foreach (var thisVar in myComp.GetType().GetProperties())
+             {
+                 try
+                 {
+                    
+                     current_stat = ( myComp.GetType() + ":" + thisVar.Name  +  ":" + thisVar.GetValue(myComp,null) );
+                     if(lastsents[i] != current_stat){
+                        networkmaster.Send_message(id, current_stat);
+                        lastsents[i] = current_stat;
+                     }
+                      i++;
+                 }
+                 catch (Exception e)
+                 {
+            
+                 }
+             }
+         }
+      
     }
     void Quit(){
         

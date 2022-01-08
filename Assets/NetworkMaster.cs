@@ -6,48 +6,38 @@ using System.Text;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
-
+using System.Threading;
 public class NetworkMaster : MonoBehaviour
 {
     private Dictionary<int,networked_object> gameobjects = new Dictionary<int,networked_object>();
+    private Dictionary<int,NetworkSlave> slaves = new Dictionary<int,NetworkSlave>();
     const int MAX_OBJECTS = 100;
     UdpClient udpClient;
+
+    private Thread _t1;
+    bool running = false;
+    bool locked = false;
+    List<string> messages = new List<string>();
+    void Awake(){
+         udpClient = new UdpClient(2556);
+        try{
+            udpClient.Connect("127.0.0.1", 25565);
+
+            Byte[] sendBytes = Encoding.ASCII.GetBytes("new client...");
+
+            udpClient.Send(sendBytes, sendBytes.Length);
+
+            running = true;
+            _t1 = new Thread(_Threadednetwork);
+            _t1.Start();
+        }
+        catch (Exception e ) {
+            Console.WriteLine(e.ToString());
+        }
+    } 
     void Start()
     {
-        udpClient = new UdpClient(2556);
-    try{
-        
-        udpClient.Connect("127.0.0.1", 25565);
-
-         // Sends a message to the host to which you have connected.
-        Byte[] sendBytes = Encoding.ASCII.GetBytes("new client...");
-
-        udpClient.Send(sendBytes, sendBytes.Length);
-
-         // Sends a message to a different host using optional hostname and port parameters.
-         //UdpClient udpClientB = new UdpClient();
-         //udpClientB.Send(sendBytes, sendBytes.Length, "AlternateHostMachineName", 25565);
-         //IPEndPoint object will allow us to read datagrams sent from any source.
-        IPEndPoint RemoteIpEndPoint = new IPEndPoint(IPAddress.Any, 0);
-
-         // Blocks until a message returns on this socket from a remote host.
-         Byte[] receiveBytes = udpClient.Receive(ref RemoteIpEndPoint);
-         string returnData = Encoding.ASCII.GetString(receiveBytes);
-
-         // Uses the IPEndPoint object to determine which of these two hosts responded.
-        Debug.Log("This is the message you received " +
-                                      returnData.ToString());
-        Debug.Log("This message was sent from " +
-                                     RemoteIpEndPoint.Address.ToString() +
-                                     " on their port number " +
-                                     RemoteIpEndPoint.Port.ToString());
-
-         
-          //udpClientB.Close();
-          }
-       catch (Exception e ) {
-                  Console.WriteLine(e.ToString());
-        }
+       
     }
     public void Send_message(int id,string message){
         Byte[] sendBytes = Encoding.ASCII.GetBytes(id+":"+message);
@@ -56,7 +46,7 @@ public class NetworkMaster : MonoBehaviour
     public int new_object(networked_object obj){
         for(int i = 0; i < MAX_OBJECTS; i ++){
             if(!gameobjects.ContainsKey(i)){
-                Send_message(-100,"NewObject:"+obj.get_name() + ":" +i);
+                Send_message(i,"NewObject:"+obj.get_name());
                 gameobjects.Add(i,obj);
                 return i;
             }
@@ -74,9 +64,66 @@ public class NetworkMaster : MonoBehaviour
 
     void Update()
     {
+        if(locked){
+            try{
+            if(messages.Count > 0){
+                
+                foreach(string message in messages){
+                    process_message(message);
+                    //Debug.Log(message);
+                }
+                messages.Clear();
+            }
+            else{
+                locked = false;
+            }
+            }catch{
+                locked = false;
+            }
+        }
        
     }
+    private void process_message(string message){
+        string[] words = message.Split(':');
+        //Debug.Log(words[1]);
+        if(words[1] == "NewObject"){
+            Debug.Log(words[2]);
+            // create a new object 
+            GameObject instance = Instantiate(Resources.Load(words[2], typeof(GameObject))) as GameObject;
+            slaves.Add(Int32.Parse(words[0]),instance.GetComponent<NetworkSlave>());
+            Debug.Log("Slave " + words[0] + "  created ");
+        }else{
+            NetworkSlave target;
+            if (slaves.TryGetValue(Int32.Parse(words[0]), out  target)){
+                 target.process_message(message);
+                 
+            }else{
+                Debug.Log("I cant find the slave  " +words[0] );
+            }
+            
+        }
+
+    }
+    
+    private void _Threadednetwork()
+    {
+        List<string> Temp_messages = new List<string>();
+        while(running){
+            IPEndPoint RemoteIpEndPoint = new IPEndPoint(IPAddress.Any, 0);
+
+            Byte[] receiveBytes = udpClient.Receive(ref RemoteIpEndPoint);
+            string returnData = Encoding.ASCII.GetString(receiveBytes);
+            Temp_messages.Add(returnData.ToString());
+        
+            if(!locked){
+                messages = Temp_messages;
+                Temp_messages.Clear();
+                locked = true;
+            }
+        }
+    }
     void Quit(){
+        running = false;
         udpClient.Close();
     }
 }
