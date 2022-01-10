@@ -16,14 +16,14 @@ public class NetworkMaster : MonoBehaviour
 
     private Thread _t1;
     bool running = false;
-    bool locked = false;
+    bool locked = true;
     List<string> messages = new List<string>();
     void Awake(){
-         udpClient = new UdpClient(2556);
+         udpClient = new UdpClient(25566);
         try{
             udpClient.Connect("127.0.0.1", 25565);
 
-            Byte[] sendBytes = Encoding.ASCII.GetBytes("new client...");
+            Byte[] sendBytes = Encoding.ASCII.GetBytes("NEWClient:");
 
             udpClient.Send(sendBytes, sendBytes.Length);
 
@@ -46,7 +46,7 @@ public class NetworkMaster : MonoBehaviour
     public int new_object(networked_object obj){
         for(int i = 0; i < MAX_OBJECTS; i ++){
             if(!gameobjects.ContainsKey(i)){
-                Send_message(i,"NewObject:"+obj.get_name());
+                Send_message(i,"NewObject:"+obj.get_name()+":");
                 gameobjects.Add(i,obj);
                 return i;
             }
@@ -64,30 +64,33 @@ public class NetworkMaster : MonoBehaviour
 
     void Update()
     {
-        if(locked){
-            try{
-            if(messages.Count > 0){
+        if(locked){ 
+           
+            
+            while(messages.Count > 0){
+                string message = messages[messages.Count-1];
+                //Debug.Log(messages.Count);
                 
-                foreach(string message in messages){
-                    process_message(message);
-                    //Debug.Log(message);
-                }
-                messages.Clear();
+                process_message(message);
+                   
+                
+                messages.RemoveAt(messages.Count-1);
+               // messages.TrimExcess();
+
             }
-            else{
+           
                 locked = false;
-            }
-            }catch{
-                locked = false;
-            }
+            
+            
         }
        
     }
     private void process_message(string message){
         string[] words = message.Split(':');
         //Debug.Log(words[1]);
+        try{
         if(words[1] == "NewObject"){
-            Debug.Log(words[2]);
+            //Debug.Log(words[2]);
             // create a new object 
             GameObject instance = Instantiate(Resources.Load(words[2], typeof(GameObject))) as GameObject;
             slaves.Add(Int32.Parse(words[0]),instance.GetComponent<NetworkSlave>());
@@ -102,6 +105,9 @@ public class NetworkMaster : MonoBehaviour
             }
             
         }
+        }catch{
+            // drop the message
+        }
 
     }
     
@@ -114,10 +120,20 @@ public class NetworkMaster : MonoBehaviour
             Byte[] receiveBytes = udpClient.Receive(ref RemoteIpEndPoint);
             string returnData = Encoding.ASCII.GetString(receiveBytes);
             Temp_messages.Add(returnData.ToString());
-        
+            //Debug.Log(returnData);
             if(!locked){
-                messages = Temp_messages;
+                foreach (string m in Temp_messages)
+                {
+                    messages.Add(m);
+                    //Temp_messages.Remove(m);
+                }
+                 /*foreach (string m in messages)
+                {
+                    Temp_messages.Remove(m);
+                }*/
+                //messages = Temp_messages;
                 Temp_messages.Clear();
+                
                 locked = true;
             }
         }

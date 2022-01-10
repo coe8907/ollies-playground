@@ -8,13 +8,16 @@
 #include<winsock2.h>
 #include <ws2tcpip.h>
 #include <string>
+#include "Master_Connection.h"
 #pragma comment(lib,"ws2_32.lib") //Winsock Library
+
 
 #define BUFLEN 1080	//Max length of buffer
 #define PORT 25565	//The port on which to listen for incoming data
 using namespace std;
 int main()
 {
+	/*
 	SOCKET s;
 	struct sockaddr_in server, si_other;
 	int slen, recv_len;
@@ -45,7 +48,8 @@ int main()
 	server.sin_port = htons(PORT);
 
 	//Bind
-	if (bind(s, (struct sockaddr *)&server, sizeof(server)) == SOCKET_ERROR)
+	
+	if (::bind(s, (struct sockaddr *)&server, sizeof(server)) == SOCKET_ERROR)
 	{
 		printf("Bind failed with error code : %d", WSAGetLastError());
 		exit(EXIT_FAILURE);
@@ -83,6 +87,8 @@ int main()
 
 	closesocket(s);
 	WSACleanup();
+	*/
+	Master_Connection con;
 
 	return 0;
 }

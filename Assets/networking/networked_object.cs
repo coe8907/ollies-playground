@@ -9,8 +9,8 @@ using System.Net.Sockets;
 public class networked_object : MonoBehaviour
 {
     // Start is called before the first frame update
-    NetworkMaster networkmaster;
-    string obj_name = "null";
+     NetworkMaster networkmaster;
+     string obj_name = "null";
     int id = -1;
     List<Component> myComponents = new List<Component>(); 
     List<string> lastsents = new List<string>();
@@ -20,18 +20,22 @@ public class networked_object : MonoBehaviour
         Component[] myComponent = GetComponents(typeof(Component));
         foreach (Component myComp in myComponent)
          {
+            if(myComp != this){
              myComponents.Add(myComp);
              Type myObjectType = myComp.GetType();
              foreach (var thisVar in myComp.GetType().GetProperties())
              {
+                 if(!Convert.ToString(thisVar.PropertyType).Contains("Matrix")){
                   try
                  {
-                    lastsents.Add(myComp.name + ":" + thisVar.Name  +  ":" + thisVar.GetValue(myComp,null));
+                    lastsents.Add(myComp.name + ":" + thisVar.Name  +  ":" + thisVar.GetValue(myComp,null)+":");
                  }
-                 catch (Exception e)
+                 catch 
                  {
                  }
+                 }
              }
+            }
          }
         obj_name = gameObject.name;
         networkmaster = GameObject.Find("Network_master").GetComponent<NetworkMaster>();
@@ -44,31 +48,37 @@ public class networked_object : MonoBehaviour
         return obj_name;
     }
     // Update is called once per frame
-    string lastsent;
-    string current_stat;
+    private string lastsent;
+    private string current_stat;
     void Update()
     {
         int i =0;
          foreach (Component myComp in myComponents)
          {
+             
+             
              Type myObjectType = myComp.GetType();
              foreach (var thisVar in myComp.GetType().GetProperties())
              {
+                 if(!Convert.ToString(thisVar.PropertyType).Contains("Matrix")){
                  try
                  {
                     
-                     current_stat = ( myComp.GetType() + ":" + thisVar.Name  +  ":" + thisVar.GetValue(myComp,null) );
+                     current_stat = ( myComp.GetType() + ":" + thisVar.Name  +  ":" + thisVar.GetValue(myComp,null) +":");
                      if(lastsents[i] != current_stat){
                         networkmaster.Send_message(id, current_stat);
                         lastsents[i] = current_stat;
                      }
                       i++;
                  }
-                 catch (Exception e)
+                 catch
                  {
             
                  }
-             }
+                 }
+             
+             
+         }
          }
       
     }

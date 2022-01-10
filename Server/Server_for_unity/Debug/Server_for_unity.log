@@ -1,2 +1,11 @@
-﻿  Master_Connection.cpp
+﻿  Client.cpp
+C:\Users\Oliver\Documents\GitHub\ollies playground\Server\Server_for_unity\Client.cpp(29,20): warning C4018: '<': signed/unsigned mismatch
+  Master_Connection.cpp
+C:\Users\Oliver\Documents\GitHub\ollies playground\Server\Server_for_unity\Master_Connection.cpp(79,23): warning C4018: '<': signed/unsigned mismatch
+  Object.cpp
+  Server_for_unity.cpp
+C:\Users\Oliver\Documents\GitHub\ollies playground\Server\Server_for_unity\Server_for_unity.cpp(15,1): warning C4005: 'BUFLEN': macro redefinition
+C:\Users\Oliver\Documents\GitHub\ollies playground\Server\Server_for_unity\Master_Connection.h(15): message : see previous definition of 'BUFLEN'
+  Source.cpp
+  Generating Code...
   Server_for_unity.vcxproj -> C:\Users\Oliver\Documents\GitHub\ollies playground\Server\Server_for_unity\Debug\Server_for_unity.exe

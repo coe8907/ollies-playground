@@ -2,12 +2,14 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System;
+using System.Globalization;
 
 public class NetworkSlave : MonoBehaviour
 {
     // Start is called before the first frame update
 
     public Dictionary<string,Component> myComponents = new Dictionary<string,Component>();
+    public List<string> meassages = new List<string>();
     void Start()
     {
         Component[] all = GetComponents(typeof(Component));
@@ -19,7 +21,18 @@ public class NetworkSlave : MonoBehaviour
     }
     public void process_message(string message){
        // Debug.Log("got the message");
-        string[] words = message.Split(':');
+       meassages.Add(message);
+    }
+    // Update is called once per frame
+    void Update()
+    {
+        
+        while(meassages.Count > 0){
+            //Debug.Log(meassages.Count);
+        
+        try{
+            
+        string[] words = meassages[meassages.Count-1].Split(':');
 
        // Debug.Log(words[0]);
        // Debug.Log(words[1]);
@@ -31,10 +44,15 @@ public class NetworkSlave : MonoBehaviour
                 foreach (var thisVar in myComp.GetType().GetProperties())
                 {
                         if(thisVar.Name == words[2]){
-                            
+                            try{
                             if(Convert.ToString(thisVar.PropertyType) == "UnityEngine.Vector3"){
-                                Debug.Log(thisVar.PropertyType);
+                                //Debug.Log(thisVar.PropertyType);
+                                //thisVar.SetValue(thisVar,StringToVector3(words[3]));
                                 thisVar.SetValue(myComp,StringToVector3(words[3]));
+                            }
+                            }catch{
+                                Debug.Log("failed to convert ");
+                                Debug.Log(StringToVector3(words[3]));
                             }
                         }
                 // lastsents.Add(myComp.name + ":" + thisVar.Name  +  ":" + thisVar.GetValue(myComp,null));
@@ -44,29 +62,47 @@ public class NetworkSlave : MonoBehaviour
             }
         
         //Type myObjectType = myComp.GetType();
-       
-    }
-    // Update is called once per frame
-    void Update()
-    {
+       }catch{
+
+           // drop message
+       }
+       meassages.RemoveAt(meassages.Count-1);
         
+        }
     }
     public static Vector3 StringToVector3(string sVector)
      {
+        Vector3 result = new Vector3(0,0,0);
+         try{
          // Remove the parentheses
-         if (sVector.StartsWith ("(") && sVector.EndsWith (")")) {
-             sVector = sVector.Substring(1, sVector.Length-2);
-         }
- 
+         //if (sVector.StartsWith ("(") && sVector.EndsWith (")")) {
+             sVector = sVector.Replace("("," ");
+              sVector = sVector.Replace(")"," ");
+              sVector = sVector.Replace(" ","");
+              sVector = sVector.Replace(".",".");
+             //sVector = sVector.Remove(sVector.Length -2);
+         //}
+        Debug.Log(sVector);
          // split the items
          string[] sArray = sVector.Split(',');
- 
+         Debug.Log(sArray[0]);
+         Debug.Log(sArray[1]);
+         Debug.Log(sArray[2]);
+         float a = float.Parse(sArray[0],CultureInfo.InvariantCulture);
+         Debug.Log(a);
+         float b = float.Parse(sArray[1],CultureInfo.InvariantCulture);
+         Debug.Log(b);
+         float c = float.Parse(sArray[2],CultureInfo.InvariantCulture);
+         Debug.Log(c);
          // store as a Vector3
-         Vector3 result = new Vector3(
+         result = new Vector3(
              float.Parse(sArray[0]),
              float.Parse(sArray[1]),
              float.Parse(sArray[2]));
- 
+         }
+         catch(Exception e){
+             Debug.Log("failed to convert string to vector" + e);
+         }
          return result;
      }
      public static Quaternion StringToQuaternion(string sQuaternion)
